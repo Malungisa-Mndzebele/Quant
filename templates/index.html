@@ -111,6 +111,54 @@
             </div>
         </div>
 
+        <!-- Brokerage Credentials -->
+        <div class="card">
+            <h2>🔐 Brokerage Account</h2>
+            <div class="warning-box" id="liveWarning" style="display: none;">
+                <strong>⚠️ WARNING: LIVE TRADING MODE</strong>
+                <p>You are about to connect to a real brokerage account. This will execute real trades with real money. Please ensure:</p>
+                <ul>
+                    <li>You have thoroughly tested your strategies in simulation mode</li>
+                    <li>You understand the risks involved in algorithmic trading</li>
+                    <li>You have set appropriate risk limits</li>
+                    <li>You are prepared to monitor the system closely</li>
+                </ul>
+            </div>
+            <div class="config-section">
+                <div class="form-group">
+                    <label>Brokerage Provider</label>
+                    <select id="brokerageProvider">
+                        <option value="simulated">Simulated (Paper Trading)</option>
+                        <option value="public">Public.com</option>
+                        <option value="moomoo">Moomoo</option>
+                    </select>
+                </div>
+                <div id="credentialsSection" style="display: none;">
+                    <div class="form-group">
+                        <label>API Key / Username</label>
+                        <input type="text" id="apiKey" placeholder="Enter your API key or username" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>API Secret / Password</label>
+                        <input type="password" id="apiSecret" placeholder="Enter your API secret or password" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="saveCredentials">
+                            Save credentials securely (encrypted in .env file)
+                        </label>
+                    </div>
+                    <div class="info-box">
+                        <strong>ℹ️ Security Note:</strong>
+                        <p>Credentials are stored locally in an encrypted .env file and never transmitted over the network except to your brokerage. Always use API keys with limited permissions.</p>
+                    </div>
+                </div>
+                <button id="testConnectionBtn" class="btn btn-secondary" style="display: none;">Test Connection</button>
+                <button id="saveCredentialsBtn" class="btn btn-primary" style="display: none;">Save Credentials</button>
+                <div id="connectionStatus" class="status-message"></div>
+            </div>
+        </div>
+
         <!-- Backtesting -->
         <div class="card">
             <h2>Backtesting</h2>

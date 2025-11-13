@@ -185,6 +185,148 @@ def get_status():
     return jsonify(system_status)
 
 
+@app.route('/api/test-connection', methods=['POST'])
+def test_connection():
+    """Test brokerage connection with provided credentials."""
+    try:
+        data = request.json
+        provider = data.get('provider')
+        api_key = data.get('api_key')
+        api_secret = data.get('api_secret')
+        
+        if not all([provider, api_key, api_secret]):
+            return jsonify({
+                'success': False,
+                'error': 'Missing required credentials'
+            }), 400
+        
+        # Import brokerage factory
+        from src.brokers.factory import BrokerageFactory
+        from src.brokers.credentials import BrokerageCredentials
+        
+        # Create credentials object
+        credentials = BrokerageCredentials(
+            api_key=api_key,
+            api_secret=api_secret
+        )
+        
+        # Create adapter
+        adapter = BrokerageFactory.create_adapter(
+            provider=provider,
+            credentials=credentials,
+            initial_capital=100000  # Dummy value for testing
+        )
+        
+        # Test authentication
+        if adapter.authenticate(credentials.to_dict()):
+            account_info = adapter.get_account_info()
+            return jsonify({
+                'success': True,
+                'account_id': account_info.account_id,
+                'balance': account_info.cash_balance,
+                'message': 'Connection successful'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Authentication failed'
+            }), 401
+            
+    except Exception as e:
+        logger.error(f"Connection test error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/save-credentials', methods=['POST'])
+def save_credentials():
+    """Save brokerage credentials."""
+    try:
+        data = request.json
+        provider = data.get('provider')
+        api_key = data.get('api_key')
+        api_secret = data.get('api_secret')
+        save_to_file = data.get('save_to_file', False)
+        
+        if not all([provider, api_key, api_secret]):
+            return jsonify({
+                'success': False,
+                'error': 'Missing required credentials'
+            }), 400
+        
+        if save_to_file:
+            # Save to .env file
+            env_path = '.env'
+            env_content = []
+            
+            # Read existing .env if it exists
+            if os.path.exists(env_path):
+                with open(env_path, 'r') as f:
+                    env_content = f.readlines()
+            
+            # Update or add credentials
+            key_prefix = f"{provider.upper()}_"
+            api_key_line = f"{key_prefix}API_KEY={api_key}\n"
+            api_secret_line = f"{key_prefix}API_SECRET={api_secret}\n"
+            
+            # Remove old credentials for this provider
+            env_content = [line for line in env_content 
+                          if not line.startswith(f"{key_prefix}API_KEY=") 
+                          and not line.startswith(f"{key_prefix}API_SECRET=")]
+            
+            # Add new credentials
+            env_content.append(api_key_line)
+            env_content.append(api_secret_line)
+            
+            # Write back to file
+            with open(env_path, 'w') as f:
+                f.writelines(env_content)
+            
+            logger.info(f"Saved credentials for {provider} to .env file")
+        
+        # Also update config.yaml
+        import yaml
+        config_path = 'config.yaml'
+        
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        if 'brokerage' not in config:
+            config['brokerage'] = {}
+        
+        config['brokerage']['provider'] = provider
+        
+        if save_to_file:
+            # Use environment variable references
+            config['brokerage']['credentials'] = {
+                'api_key': f"${{{provider.upper()}_API_KEY}}",
+                'api_secret': f"${{{provider.upper()}_API_SECRET}}"
+            }
+        else:
+            # Store directly (less secure, session only)
+            config['brokerage']['credentials'] = {
+                'api_key': api_key,
+                'api_secret': api_secret
+            }
+        
+        with open(config_path, 'w') as f:
+            yaml.dump(config, f, default_flow_style=False)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Credentials saved successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Save credentials error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/backtest', methods=['POST'])
 def run_backtest():
     """Run a backtest with given parameters."""

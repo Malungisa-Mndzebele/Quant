@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('refreshBtn').addEventListener('click', updateStatus);
     document.getElementById('saveConfigBtn').addEventListener('click', saveConfig);
     document.getElementById('runBacktestBtn').addEventListener('click', runBacktest);
+    document.getElementById('brokerageProvider').addEventListener('change', handleBrokerageChange);
+    document.getElementById('tradingMode').addEventListener('change', handleTradingModeChange);
+    document.getElementById('testConnectionBtn').addEventListener('click', testConnection);
+    document.getElementById('saveCredentialsBtn').addEventListener('click', saveCredentials);
     
     // Set default dates for backtest
     const today = new Date();
@@ -332,4 +336,139 @@ function showAlert(message, type) {
     );
     
     setTimeout(() => alertDiv.remove(), 5000);
+}
+
+// Handle brokerage provider change
+function handleBrokerageChange() {
+    const provider = document.getElementById('brokerageProvider').value;
+    const credentialsSection = document.getElementById('credentialsSection');
+    const testBtn = document.getElementById('testConnectionBtn');
+    const saveBtn = document.getElementById('saveCredentialsBtn');
+    
+    if (provider !== 'simulated') {
+        credentialsSection.style.display = 'block';
+        testBtn.style.display = 'inline-block';
+        saveBtn.style.display = 'inline-block';
+    } else {
+        credentialsSection.style.display = 'none';
+        testBtn.style.display = 'none';
+        saveBtn.style.display = 'none';
+    }
+}
+
+// Handle trading mode change
+function handleTradingModeChange() {
+    const mode = document.getElementById('tradingMode').value;
+    const warning = document.getElementById('liveWarning');
+    
+    if (mode === 'live') {
+        warning.style.display = 'block';
+    } else {
+        warning.style.display = 'none';
+    }
+}
+
+// Test brokerage connection
+async function testConnection() {
+    const btn = document.getElementById('testConnectionBtn');
+    const statusDiv = document.getElementById('connectionStatus');
+    
+    btn.disabled = true;
+    btn.textContent = 'Testing...';
+    statusDiv.className = 'status-message info show';
+    statusDiv.textContent = 'Testing connection to brokerage...';
+    
+    try {
+        const provider = document.getElementById('brokerageProvider').value;
+        const apiKey = document.getElementById('apiKey').value;
+        const apiSecret = document.getElementById('apiSecret').value;
+        
+        if (!apiKey || !apiSecret) {
+            throw new Error('Please enter both API key and secret');
+        }
+        
+        const response = await fetch(`${API_BASE}/test-connection`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                provider: provider,
+                api_key: apiKey,
+                api_secret: apiSecret
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            statusDiv.className = 'status-message success show';
+            statusDiv.innerHTML = `
+                <strong>✓ Connection Successful!</strong><br>
+                Account ID: ${data.account_id || 'N/A'}<br>
+                Balance: ${data.balance ? formatCurrency(data.balance) : 'N/A'}
+            `;
+            showAlert('Successfully connected to brokerage!', 'success');
+        } else {
+            throw new Error(data.error || 'Connection failed');
+        }
+    } catch (error) {
+        statusDiv.className = 'status-message error show';
+        statusDiv.innerHTML = `<strong>✗ Connection Failed</strong><br>${error.message}`;
+        showAlert(`Connection failed: ${error.message}`, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Test Connection';
+    }
+}
+
+// Save brokerage credentials
+async function saveCredentials() {
+    const btn = document.getElementById('saveCredentialsBtn');
+    const statusDiv = document.getElementById('connectionStatus');
+    
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    
+    try {
+        const provider = document.getElementById('brokerageProvider').value;
+        const apiKey = document.getElementById('apiKey').value;
+        const apiSecret = document.getElementById('apiSecret').value;
+        const saveToFile = document.getElementById('saveCredentials').checked;
+        
+        if (!apiKey || !apiSecret) {
+            throw new Error('Please enter both API key and secret');
+        }
+        
+        const response = await fetch(`${API_BASE}/save-credentials`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                provider: provider,
+                api_key: apiKey,
+                api_secret: apiSecret,
+                save_to_file: saveToFile
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            statusDiv.className = 'status-message success show';
+            statusDiv.innerHTML = '<strong>✓ Credentials Saved!</strong><br>You can now start the system in live mode.';
+            showAlert('Credentials saved successfully!', 'success');
+            
+            // Clear password field for security
+            if (!saveToFile) {
+                document.getElementById('apiSecret').value = '';
+            }
+        } else {
+            throw new Error(data.error || 'Failed to save credentials');
+        }
+    } catch (error) {
+        statusDiv.className = 'status-message error show';
+        statusDiv.innerHTML = `<strong>✗ Save Failed</strong><br>${error.message}`;
+        showAlert(`Failed to save: ${error.message}`, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Credentials';
+    }
 }
