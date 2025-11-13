@@ -567,6 +567,405 @@ class BrokerageError(TradingSystemError):
 - Monitoring and alerting integration
 - Automated backup of trade history
 
+## Web Interface
+
+### Purpose
+Provides a user-friendly web-based dashboard for configuring, monitoring, and controlling the trading system without requiring command-line interaction.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Web Browser                             │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐            │
+│  │ Dashboard  │  │   Config   │  │  Backtest  │            │
+│  │   View     │  │   Editor   │  │   Runner   │            │
+│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘            │
+└────────┼────────────────┼────────────────┼──────────────────┘
+         │                │                │
+         │    HTTP/REST API (JSON)         │
+         │                │                │
+┌────────▼────────────────▼────────────────▼──────────────────┐
+│                    Flask Web Server                          │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              API Endpoints                            │   │
+│  │  • GET  /api/status    - System status               │   │
+│  │  • POST /api/start     - Start trading               │   │
+│  │  • POST /api/stop      - Stop trading                │   │
+│  │  • GET  /api/config    - Get configuration           │   │
+│  │  • POST /api/config    - Update configuration        │   │
+│  │  • POST /api/backtest  - Run backtest                │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                           │                                  │
+│  ┌────────────────────────▼──────────────────────────────┐  │
+│  │         Background Thread Manager                      │  │
+│  │  • Runs TradingSystem in separate thread              │  │
+│  │  • Manages system lifecycle (start/stop)              │  │
+│  │  • Collects real-time status updates                  │  │
+│  └────────────────────────────────────────────────────────┘  │
+└───────────────────────────┼──────────────────────────────────┘
+                            │
+                            ▼
+                ┌───────────────────────┐
+                │   Trading System      │
+                │   (Core Components)   │
+                └───────────────────────┘
+```
+
+### Components
+
+#### 1. Flask Backend (`web_app.py`)
+
+**Purpose**: REST API server that bridges the web UI and trading system core
+
+**Key Endpoints**:
+
+```python
+# System Control
+POST /api/start
+  - Initializes and starts trading system in background thread
+  - Returns: {success: bool, message: str}
+
+POST /api/stop
+  - Gracefully stops trading system
+  - Returns: {success: bool, message: str}
+
+# Status Monitoring
+GET /api/status
+  - Returns real-time system status
+  - Response: {
+      running: bool,
+      mode: str,
+      portfolio: {
+        total_value: float,
+        cash: float,
+        positions_value: float,
+        unrealized_pnl: float,
+        total_return: float,
+        num_positions: int
+      },
+      positions: [{
+        symbol: str,
+        quantity: int,
+        avg_price: float,
+        current_price: float,
+        market_value: float,
+        unrealized_pnl: float,
+        unrealized_pnl_pct: float
+      }],
+      account: {
+        account_id: str,
+        cash: float,
+        buying_power: float,
+        portfolio_value: float
+      },
+      last_update: str (ISO timestamp)
+    }
+
+# Configuration Management
+GET /api/config
+  - Retrieves current configuration
+  - Returns: {success: bool, config: dict}
+
+POST /api/config
+  - Updates system configuration
+  - Body: Complete config object
+  - Returns: {success: bool, message: str}
+
+# Backtesting
+POST /api/backtest
+  - Runs historical backtest
+  - Body: {
+      start_date: str (YYYY-MM-DD),
+      end_date: str (YYYY-MM-DD),
+      symbols: [str],
+      initial_capital: float
+    }
+  - Returns: {
+      success: bool,
+      result: BacktestResult
+    }
+```
+
+**Threading Model**:
+- Main thread: Flask web server handling HTTP requests
+- Background thread: Trading system execution loop
+- Thread-safe communication via global state with locks
+- Graceful shutdown handling for both threads
+
+#### 2. Frontend UI (`templates/index.html`)
+
+**Purpose**: Single-page application providing interactive dashboard
+
+**Sections**:
+
+1. **Control Panel**
+   - Start/Stop buttons with state management
+   - System status indicator (running/stopped)
+   - Refresh button for manual updates
+
+2. **Portfolio Overview**
+   - Real-time metrics display:
+     - Total portfolio value
+     - Cash balance
+     - Positions value
+     - Unrealized P&L (color-coded)
+     - Total return percentage
+     - Number of positions
+   - Auto-refresh every 5 seconds when system running
+
+3. **Positions Table**
+   - Live position tracking
+   - Columns: Symbol, Quantity, Avg Price, Current Price, Market Value, P&L, P&L%
+   - Color-coded profit/loss indicators
+   - Empty state when no positions
+
+4. **Configuration Editor**
+   - Form-based configuration:
+     - Trading mode selector (Simulation/Live)
+     - Symbols input (comma-separated)
+     - Update interval (seconds)
+     - Initial capital
+   - Save button with validation
+   - Success/error notifications
+
+5. **Backtesting Interface**
+   - Date range picker
+   - Symbol selection
+   - Run backtest button
+   - Results display:
+     - Total return
+     - Sharpe ratio
+     - Max drawdown
+     - Total trades
+     - Win rate
+     - Final portfolio value
+
+#### 3. Frontend JavaScript (`static/app.js`)
+
+**Purpose**: Client-side logic for API communication and UI updates
+
+**Key Functions**:
+
+```javascript
+// System Control
+async function startSystem()
+  - Calls POST /api/start
+  - Disables start button, enables stop button
+  - Starts status polling interval
+  - Shows success/error notification
+
+async function stopSystem()
+  - Calls POST /api/stop
+  - Enables start button, disables stop button
+  - Stops status polling
+  - Shows success/error notification
+
+// Status Updates
+async function updateStatus()
+  - Calls GET /api/status
+  - Updates all dashboard metrics
+  - Refreshes positions table
+  - Updates status badge
+  - Called every 5 seconds when running
+
+// Configuration
+async function loadConfig()
+  - Calls GET /api/config
+  - Populates configuration form
+
+async function saveConfig()
+  - Validates form inputs
+  - Calls POST /api/config
+  - Shows success/error notification
+
+// Backtesting
+async function runBacktest()
+  - Validates date range and symbols
+  - Calls POST /api/backtest
+  - Displays results in grid format
+  - Shows loading state during execution
+```
+
+**State Management**:
+- Polling interval ID for auto-refresh
+- System running state
+- Last update timestamp
+- Error handling with user-friendly messages
+
+#### 4. Styling (`static/style.css`)
+
+**Design System**:
+- Modern gradient background (purple theme)
+- Card-based layout with shadows
+- Responsive grid system
+- Color-coded metrics:
+  - Green: Positive P&L
+  - Red: Negative P&L
+  - Gray: Neutral/stopped state
+- Smooth transitions and hover effects
+- Mobile-responsive design
+
+**Key Features**:
+- Pulsing status indicator
+- Button state transitions
+- Table hover effects
+- Form input focus states
+- Alert notifications (success/error)
+
+### Data Flow
+
+#### Starting the System
+```
+User clicks "Start" 
+  → Frontend: POST /api/start
+  → Backend: Initialize TradingSystem
+  → Backend: Start background thread
+  → Backend: Return success
+  → Frontend: Enable polling
+  → Frontend: Update UI state
+```
+
+#### Real-time Monitoring
+```
+Every 5 seconds (when running):
+  Frontend: GET /api/status
+  → Backend: Query TradingSystem state
+  → Backend: Collect portfolio data
+  → Backend: Collect positions
+  → Backend: Return JSON
+  → Frontend: Update dashboard
+  → Frontend: Refresh positions table
+```
+
+#### Configuration Update
+```
+User edits config and clicks "Save"
+  → Frontend: Validate inputs
+  → Frontend: POST /api/config
+  → Backend: Write to config.yaml
+  → Backend: Return success
+  → Frontend: Show notification
+```
+
+#### Running Backtest
+```
+User sets parameters and clicks "Run"
+  → Frontend: POST /api/backtest
+  → Backend: Create Backtester instance
+  → Backend: Fetch historical data
+  → Backend: Execute backtest
+  → Backend: Return results
+  → Frontend: Display metrics
+```
+
+### Security Considerations
+
+1. **CORS Policy**
+   - Flask-CORS enabled for development
+   - Restrict origins in production
+
+2. **Input Validation**
+   - Server-side validation of all inputs
+   - Sanitize symbol inputs
+   - Validate date ranges
+   - Check numeric bounds
+
+3. **Authentication** (Future Enhancement)
+   - Currently no authentication (local use only)
+   - Production should add:
+     - JWT-based authentication
+     - Session management
+     - Role-based access control
+
+4. **Rate Limiting** (Future Enhancement)
+   - Prevent API abuse
+   - Limit backtest frequency
+   - Throttle status requests
+
+### Error Handling
+
+**Frontend**:
+- Try-catch blocks around all API calls
+- User-friendly error messages
+- Alert notifications for errors
+- Graceful degradation on API failures
+
+**Backend**:
+- Exception handling in all endpoints
+- Proper HTTP status codes
+- Detailed error messages in responses
+- Logging of all errors
+
+### Performance Optimization
+
+1. **Efficient Polling**
+   - Only poll when system is running
+   - 5-second interval balances freshness and load
+   - Stop polling when system stopped
+
+2. **Lazy Loading**
+   - Load configuration on demand
+   - Backtest results only when requested
+
+3. **Caching**
+   - Browser caches static assets (CSS, JS)
+   - Configuration cached in memory
+
+4. **Async Operations**
+   - Non-blocking API calls
+   - Background thread for trading system
+   - Responsive UI during operations
+
+### Deployment
+
+**Development**:
+```bash
+python web_app.py
+# Runs on http://localhost:5000
+# Debug mode enabled
+# Auto-reload on code changes
+```
+
+**Production** (Future):
+- Use production WSGI server (Gunicorn, uWSGI)
+- Reverse proxy (Nginx)
+- HTTPS with SSL certificates
+- Environment-based configuration
+- Proper logging and monitoring
+
+### Future Enhancements
+
+1. **Real-time Updates**
+   - WebSocket support for live updates
+   - Eliminate polling overhead
+   - Push notifications for events
+
+2. **Advanced Charting**
+   - Equity curve visualization
+   - Position performance charts
+   - Strategy signal visualization
+
+3. **Trade History**
+   - Detailed trade log viewer
+   - Export to CSV/Excel
+   - Performance analytics
+
+4. **Multi-user Support**
+   - User authentication
+   - Multiple portfolios
+   - Shared strategies
+
+5. **Mobile App**
+   - Native iOS/Android apps
+   - Push notifications
+   - Quick actions
+
+6. **Strategy Builder**
+   - Visual strategy editor
+   - No-code strategy creation
+   - Strategy marketplace
+
 ## Technology Stack
 
 - **Language**: Python 3.10+
@@ -579,3 +978,7 @@ class BrokerageError(TradingSystemError):
 - **Async**: asyncio, aiohttp
 - **Database**: SQLite (dev), PostgreSQL (prod)
 - **Scheduling**: APScheduler for periodic tasks
+- **Web Framework**: Flask 3.0+
+- **Web UI**: HTML5, CSS3, Vanilla JavaScript
+- **HTTP Client**: Fetch API
+- **CORS**: Flask-CORS
