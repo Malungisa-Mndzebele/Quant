@@ -62,7 +62,7 @@ class DataCache:
         mtime = datetime.fromtimestamp(cache_path.stat().st_mtime)
         age = datetime.now() - mtime
         
-        is_valid = age.days < self.max_age_days
+        is_valid = age.days < self.max_age_days and self.max_age_days > 0
         
         if not is_valid:
             logger.debug(f"Cache expired: {cache_path.name} (age: {age.days} days)")
