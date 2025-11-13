@@ -1,0 +1,45 @@
+# Trading System Configuration
+# This file configures all aspects of the quantitative trading system
+
+trading:
+  mode: "simulation"  # Options: "simulation" or "live"
+  initial_capital: 100000.0
+  symbols: ["AAPL", "GOOGL", "MSFT"]  # Stocks to trade
+  update_interval_seconds: 60  # How often to check for new data
+  enable_logging: true
+  log_level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+brokerage:
+  provider: "simulated"  # Options: "simulated", "public", "moomoo"
+  credentials:
+    api_key: "${BROKERAGE_API_KEY}"
+    api_secret: "${BROKERAGE_API_SECRET}"
+  account_id: null
+  base_url: null
+  timeout_seconds: 30
+  max_retries: 3
+  additional_params: {}
+
+data:
+  provider: "yfinance"  # Options: "yfinance", "alphaavantage"
+  api_key: "${ALPHA_VANTAGE_API_KEY}"  # Required for alphaavantage
+  cache_enabled: true
+  cache_dir: "./data/cache"
+  cache_ttl_seconds: 3600  # Cache validity in seconds
+  max_retries: 3
+
+risk:
+  max_position_size_pct: 10.0  # Maximum position size as % of portfolio
+  max_daily_loss_pct: 5.0  # Maximum daily loss as % of portfolio
+  max_portfolio_leverage: 1.0  # Maximum leverage allowed
+  allowed_symbols: null  # null = all symbols allowed, or list of symbols
+  max_positions: null  # null = unlimited, or max number of positions
+  max_order_value: null  # null = unlimited, or max order value in dollars
+
+strategies:
+  - name: "MovingAverageCrossover"
+    enabled: true
+    params:
+      fast_period: 10
+      slow_period: 30
+      symbols: ["AAPL", "GOOGL"]
