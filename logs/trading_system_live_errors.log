@@ -118,3 +118,63 @@ Traceback (most recent call last):
   File "C:\Home\Code\Quant\src\trading_system.py", line 241, in _initialize_brokerage
     raise TradingSystemError(f"Brokerage initialization failed: {e}") from e
 src.trading_system.TradingSystemError: Brokerage initialization failed: Cannot use simulated brokerage in LIVE trading mode. Please configure a real brokerage provider or switch to SIMULATION mode.
+2025-11-13 15:15:33 - [LIVE] - [ERROR] - TradingSystem - initialize:109
+Failed to initialize trading system: Brokerage initialization failed: Cannot use simulated brokerage in LIVE trading mode. Please configure a real brokerage provider or switch to SIMULATION mode.
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 218, in _initialize_brokerage
+    self.brokerage = BrokerageFactory.create_adapter(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\brokers\factory.py", line 78, in create_adapter
+    cls._validate_config(config, trading_mode)
+  File "C:\Home\Code\Quant\src\brokers\factory.py", line 130, in _validate_config
+    raise BrokerageError(
+src.brokers.errors.BrokerageError: Cannot use simulated brokerage in LIVE trading mode. Please configure a real brokerage provider or switch to SIMULATION mode.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 87, in initialize
+    self._initialize_brokerage()
+  File "C:\Home\Code\Quant\src\trading_system.py", line 241, in _initialize_brokerage
+    raise TradingSystemError(f"Brokerage initialization failed: {e}") from e
+src.trading_system.TradingSystemError: Brokerage initialization failed: Cannot use simulated brokerage in LIVE trading mode. Please configure a real brokerage provider or switch to SIMULATION mode.
+2025-11-13 15:17:12 - [LIVE] - [ERROR] - TradingSystem - initialize:109
+Failed to initialize trading system: Brokerage initialization failed: Cannot use simulated brokerage in LIVE trading mode. Please configure a real brokerage provider or switch to SIMULATION mode.
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 218, in _initialize_brokerage
+    self.brokerage = BrokerageFactory.create_adapter(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\brokers\factory.py", line 78, in create_adapter
+    cls._validate_config(config, trading_mode)
+  File "C:\Home\Code\Quant\src\brokers\factory.py", line 130, in _validate_config
+    raise BrokerageError(
+src.brokers.errors.BrokerageError: Cannot use simulated brokerage in LIVE trading mode. Please configure a real brokerage provider or switch to SIMULATION mode.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 87, in initialize
+    self._initialize_brokerage()
+  File "C:\Home\Code\Quant\src\trading_system.py", line 241, in _initialize_brokerage
+    raise TradingSystemError(f"Brokerage initialization failed: {e}") from e
+src.trading_system.TradingSystemError: Brokerage initialization failed: Cannot use simulated brokerage in LIVE trading mode. Please configure a real brokerage provider or switch to SIMULATION mode.
+2025-11-13 15:21:17 - [LIVE] - [ERROR] - TradingSystem - initialize:109
+Failed to initialize trading system: Brokerage initialization failed: Cannot use simulated brokerage in LIVE trading mode. Please configure a real brokerage provider or switch to SIMULATION mode.
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 218, in _initialize_brokerage
+    self.brokerage = BrokerageFactory.create_adapter(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\brokers\factory.py", line 78, in create_adapter
+    cls._validate_config(config, trading_mode)
+  File "C:\Home\Code\Quant\src\brokers\factory.py", line 130, in _validate_config
+    raise BrokerageError(
+src.brokers.errors.BrokerageError: Cannot use simulated brokerage in LIVE trading mode. Please configure a real brokerage provider or switch to SIMULATION mode.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 87, in initialize
+    self._initialize_brokerage()
+  File "C:\Home\Code\Quant\src\trading_system.py", line 241, in _initialize_brokerage
+    raise TradingSystemError(f"Brokerage initialization failed: {e}") from e
+src.trading_system.TradingSystemError: Brokerage initialization failed: Cannot use simulated brokerage in LIVE trading mode. Please configure a real brokerage provider or switch to SIMULATION mode.

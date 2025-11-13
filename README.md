@@ -17,6 +17,7 @@ A Python-based algorithmic trading platform for developing, backtesting, and exe
 
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Web Interface](#web-interface)
 - [Configuration](#configuration)
 - [Usage](#usage)
   - [Running the Trading System](#running-the-trading-system)
@@ -93,6 +94,28 @@ python main.py run
 ```
 
 Press `CTRL+C` to stop gracefully.
+
+## Web Interface
+
+A modern web dashboard is available for easier system management:
+
+### Starting the Web Interface
+
+```bash
+python web_app.py
+```
+
+Then open your browser to `http://localhost:5000`
+
+### Features
+
+- **Real-time Dashboard**: Monitor portfolio, positions, and P&L
+- **System Control**: Start/stop trading with one click
+- **Configuration Editor**: Update settings through the UI
+- **Backtesting**: Run and visualize backtests
+- **Live Updates**: Automatic status refresh every 5 seconds
+
+See [WEB_README.md](WEB_README.md) for detailed web interface documentation.
 
 ## Configuration
 

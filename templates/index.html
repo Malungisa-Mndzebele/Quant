@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quant Trading System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Quant Trading System</h1>
+            <div class="status-badge" id="systemStatus">
+                <span class="status-dot"></span>
+                <span class="status-text">Stopped</span>
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- Control Panel -->
+            <div class="card">
+                <h2>Control Panel</h2>
+                <div class="controls">
+                    <button id="startBtn" class="btn btn-success">Start System</button>
+                    <button id="stopBtn" class="btn btn-danger" disabled>Stop System</button>
+                    <button id="refreshBtn" class="btn btn-secondary">Refresh Status</button>
+                </div>
+            </div>
+
+            <!-- Portfolio Overview -->
+            <div class="card">
+                <h2>Portfolio Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-label">Total Value</div>
+                        <div class="stat-value" id="totalValue">$0.00</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Cash</div>
+                        <div class="stat-value" id="cash">$0.00</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Positions Value</div>
+                        <div class="stat-value" id="positionsValue">$0.00</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Unrealized P&L</div>
+                        <div class="stat-value" id="unrealizedPnl">$0.00</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Total Return</div>
+                        <div class="stat-value" id="totalReturn">0.00%</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Positions</div>
+                        <div class="stat-value" id="numPositions">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Positions Table -->
+        <div class="card">
+            <h2>Current Positions</h2>
+            <div class="table-container">
+                <table id="positionsTable">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Quantity</th>
+                            <th>Avg Price</th>
+                            <th>Current Price</th>
+                            <th>Market Value</th>
+                            <th>Unrealized P&L</th>
+                            <th>P&L %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="positionsBody">
+                        <tr>
+                            <td colspan="7" class="empty-state">No positions</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <div class="card">
+            <h2>Configuration</h2>
+            <div class="config-section">
+                <div class="form-group">
+                    <label>Trading Mode</label>
+                    <select id="tradingMode">
+                        <option value="simulation">Simulation</option>
+                        <option value="live">Live</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Symbols (comma-separated)</label>
+                    <input type="text" id="symbols" placeholder="AAPL, GOOGL, MSFT">
+                </div>
+                <div class="form-group">
+                    <label>Update Interval (seconds)</label>
+                    <input type="number" id="updateInterval" value="60" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Initial Capital</label>
+                    <input type="number" id="initialCapital" value="100000" min="1000">
+                </div>
+                <button id="saveConfigBtn" class="btn btn-primary">Save Configuration</button>
+            </div>
+        </div>
+
+        <!-- Backtesting -->
+        <div class="card">
+            <h2>Backtesting</h2>
+            <div class="config-section">
+                <div class="form-group">
+                    <label>Start Date</label>
+                    <input type="date" id="backtestStartDate">
+                </div>
+                <div class="form-group">
+                    <label>End Date</label>
+                    <input type="date" id="backtestEndDate">
+                </div>
+                <div class="form-group">
+                    <label>Symbols (comma-separated)</label>
+                    <input type="text" id="backtestSymbols" placeholder="AAPL, GOOGL">
+                </div>
+                <button id="runBacktestBtn" class="btn btn-primary">Run Backtest</button>
+            </div>
+            <div id="backtestResults" class="backtest-results"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
