@@ -23,6 +23,31 @@ Before setting up live trading:
 
 ## Supported Brokers
 
+### Robinhood
+
+**Getting API Credentials:**
+1. You'll use your regular Robinhood login credentials
+2. Username: Your Robinhood email address
+3. Password: Your Robinhood password
+4. MFA Code: If you have 2-factor authentication enabled, you'll need to provide the code
+
+**Important Notes:**
+- Robinhood uses your regular login credentials (not separate API keys)
+- If you have 2FA enabled, you'll need to enter the code each time
+- The system uses the `robin-stocks` library for Robinhood integration
+- Install with: `pip install robin-stocks`
+
+**Permissions:**
+- Full account access (uses your login)
+- Can place and cancel orders
+- View positions and account balance
+
+**Security Recommendations:**
+- Enable 2-factor authentication for added security
+- Use a strong, unique password
+- Monitor your account regularly
+- Consider using a dedicated trading account
+
 ### Public.com
 
 **Getting API Credentials:**

@@ -28,6 +28,27 @@ class BrokerageFactory:
     }
     
     @classmethod
+    def _register_default_adapters(cls):
+        """Register default brokerage adapters."""
+        try:
+            from .robinhood_adapter import RobinhoodAdapter
+            cls._adapters['robinhood'] = RobinhoodAdapter
+        except ImportError:
+            logger.debug("Robinhood adapter not available (robin_stocks not installed)")
+        
+        try:
+            from .public_adapter import PublicBrokerageAdapter
+            cls._adapters['public'] = PublicBrokerageAdapter
+        except ImportError:
+            logger.debug("Public adapter not available")
+        
+        try:
+            from .moomoo_adapter import MoomooBrokerageAdapter
+            cls._adapters['moomoo'] = MoomooBrokerageAdapter
+        except ImportError:
+            logger.debug("Moomoo adapter not available")
+    
+    @classmethod
     def register_adapter(cls, provider: str, adapter_class: Type[BrokerageAdapter]) -> None:
         """
         Register a new brokerage adapter.
@@ -51,6 +72,8 @@ class BrokerageFactory:
         Returns:
             List of provider names
         """
+        # Ensure default adapters are registered
+        cls._register_default_adapters()
         return list(cls._adapters.keys())
     
     @classmethod
