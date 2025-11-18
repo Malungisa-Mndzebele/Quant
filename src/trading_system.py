@@ -355,6 +355,17 @@ class TradingSystem:
                 slow_period=strategy_config.params.get('slow_period', 30),
                 quantity=strategy_config.params.get('quantity', 100)
             )
+        elif strategy_name == 'bollingermeanreversion':
+            from src.strategies.bollinger_mean_reversion import BollingerMeanReversionStrategy
+            return BollingerMeanReversionStrategy(
+                symbols=strategy_config.params.get('symbols', ['AAPL']),
+                bb_period=strategy_config.params.get('bb_period', 20),
+                bb_std=strategy_config.params.get('bb_std', 2.0),
+                rsi_period=strategy_config.params.get('rsi_period', 14),
+                rsi_oversold=strategy_config.params.get('rsi_oversold', 30),
+                rsi_overbought=strategy_config.params.get('rsi_overbought', 70),
+                quantity=strategy_config.params.get('quantity', 100)
+            )
         else:
             self.logger.warning(f"Unknown strategy type: {strategy_config.name}")
             return None

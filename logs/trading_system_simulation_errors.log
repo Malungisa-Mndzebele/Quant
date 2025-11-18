@@ -1099,3 +1099,126 @@ Traceback (most recent call last):
   File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
     raise OrderError(error_msg)
 src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for MSFT
+2025-11-13 16:06:10 - [SIMULATION] - [ERROR] - src.execution.order_manager - submit_order:140
+Order submission failed after 3 attempts: No price data available for AAPL
+
+2025-11-13 16:06:10 - [SIMULATION] - [ERROR] - TradingSystem - _process_signals:599
+Error processing signal for AAPL: Order submission failed after 3 attempts: No price data available for AAPL
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 591, in _process_signals
+    success = self.order_manager.submit_order(order)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
+    raise OrderError(error_msg)
+src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for AAPL
+2025-11-13 16:06:14 - [SIMULATION] - [ERROR] - src.execution.order_manager - submit_order:140
+Order submission failed after 3 attempts: No price data available for AAPL
+
+2025-11-13 16:06:14 - [SIMULATION] - [ERROR] - TradingSystem - _process_signals:599
+Error processing signal for AAPL: Order submission failed after 3 attempts: No price data available for AAPL
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 591, in _process_signals
+    success = self.order_manager.submit_order(order)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
+    raise OrderError(error_msg)
+src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for AAPL
+2025-11-13 16:06:17 - [SIMULATION] - [ERROR] - src.execution.order_manager - submit_order:140
+Order submission failed after 3 attempts: No price data available for AAPL
+
+2025-11-13 16:06:17 - [SIMULATION] - [ERROR] - TradingSystem - _process_signals:599
+Error processing signal for AAPL: Order submission failed after 3 attempts: No price data available for AAPL
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 591, in _process_signals
+    success = self.order_manager.submit_order(order)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
+    raise OrderError(error_msg)
+src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for AAPL
+2025-11-13 16:06:17 - [SIMULATION] - [ERROR] - TradingSystem - _fetch_market_data:546
+Failed to fetch data for AAPL: API Error
+
+2025-11-13 16:06:23 - [SIMULATION] - [ERROR] - src.execution.order_manager - submit_order:140
+Order submission failed after 3 attempts: No price data available for AAPL
+
+2025-11-13 16:06:23 - [SIMULATION] - [ERROR] - TradingSystem - _process_signals:599
+Error processing signal for AAPL: Order submission failed after 3 attempts: No price data available for AAPL
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 591, in _process_signals
+    success = self.order_manager.submit_order(order)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
+    raise OrderError(error_msg)
+src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for AAPL
+2025-11-13 16:06:26 - [SIMULATION] - [ERROR] - src.execution.order_manager - submit_order:140
+Order submission failed after 3 attempts: No price data available for AAPL
+
+2025-11-13 16:06:26 - [SIMULATION] - [ERROR] - TradingSystem - _process_signals:599
+Error processing signal for AAPL: Order submission failed after 3 attempts: No price data available for AAPL
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 591, in _process_signals
+    success = self.order_manager.submit_order(order)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
+    raise OrderError(error_msg)
+src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for AAPL
+2025-11-13 16:06:29 - [SIMULATION] - [ERROR] - src.execution.order_manager - submit_order:140
+Order submission failed after 3 attempts: No price data available for AAPL
+
+2025-11-13 16:06:29 - [SIMULATION] - [ERROR] - TradingSystem - _process_signals:599
+Error processing signal for AAPL: Order submission failed after 3 attempts: No price data available for AAPL
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 591, in _process_signals
+    success = self.order_manager.submit_order(order)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
+    raise OrderError(error_msg)
+src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for AAPL
+2025-11-13 16:06:32 - [SIMULATION] - [ERROR] - src.execution.order_manager - submit_order:140
+Order submission failed after 3 attempts: No price data available for AAPL
+
+2025-11-13 16:06:32 - [SIMULATION] - [ERROR] - TradingSystem - _process_signals:599
+Error processing signal for AAPL: Order submission failed after 3 attempts: No price data available for AAPL
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 591, in _process_signals
+    success = self.order_manager.submit_order(order)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
+    raise OrderError(error_msg)
+src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for AAPL
+2025-11-13 16:06:35 - [SIMULATION] - [ERROR] - src.execution.order_manager - submit_order:140
+Order submission failed after 3 attempts: No price data available for AAPL
+
+2025-11-13 16:06:35 - [SIMULATION] - [ERROR] - TradingSystem - _process_signals:599
+Error processing signal for AAPL: Order submission failed after 3 attempts: No price data available for AAPL
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 591, in _process_signals
+    success = self.order_manager.submit_order(order)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
+    raise OrderError(error_msg)
+src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for AAPL
+2025-11-13 16:06:38 - [SIMULATION] - [ERROR] - src.execution.order_manager - submit_order:140
+Order submission failed after 3 attempts: No price data available for GOOGL
+
+2025-11-13 16:06:38 - [SIMULATION] - [ERROR] - TradingSystem - _process_signals:599
+Error processing signal for GOOGL: Order submission failed after 3 attempts: No price data available for GOOGL
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 591, in _process_signals
+    success = self.order_manager.submit_order(order)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
+    raise OrderError(error_msg)
+src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for GOOGL
+2025-11-13 16:06:41 - [SIMULATION] - [ERROR] - src.execution.order_manager - submit_order:140
+Order submission failed after 3 attempts: No price data available for MSFT
+
+2025-11-13 16:06:41 - [SIMULATION] - [ERROR] - TradingSystem - _process_signals:599
+Error processing signal for MSFT: Order submission failed after 3 attempts: No price data available for MSFT
+Traceback (most recent call last):
+  File "C:\Home\Code\Quant\src\trading_system.py", line 591, in _process_signals
+    success = self.order_manager.submit_order(order)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Home\Code\Quant\src\execution\order_manager.py", line 141, in submit_order
+    raise OrderError(error_msg)
+src.execution.order_manager.OrderError: Order submission failed after 3 attempts: No price data available for MSFT
