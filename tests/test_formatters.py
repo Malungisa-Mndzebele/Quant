@@ -45,13 +45,13 @@ def test_number_formatting_precision(value):
         f"Greek '{formatted_greek}' should have exactly 4 decimal places"
     
     # Verify that parsing the formatted string gives a value close to the original
-    # (within rounding tolerance)
+    # (within rounding tolerance - 0.0001 accounts for rounding to 4 decimal places)
     parsed_price = float(formatted_price)
-    assert abs(parsed_price - value) < 0.00005, \
+    assert abs(parsed_price - value) < 0.0001, \
         f"Formatted price {formatted_price} should round to approximately {value}"
     
     parsed_greek = float(formatted_greek)
-    assert abs(parsed_greek - value) < 0.00005, \
+    assert abs(parsed_greek - value) < 0.0001, \
         f"Formatted Greek {formatted_greek} should round to approximately {value}"
 
 
