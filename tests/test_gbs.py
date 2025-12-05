@@ -260,7 +260,7 @@ class TestGBS(unittest.TestCase):
         logging.info("Testing American Option implied volatility")
         assert_close(_american_implied_vol("p", fs=90, x=100, t=0.5, r=0.1, b=0, cp=10.54), 0.15, prec=0.01)
         assert_close(_american_implied_vol("p", fs=100, x=100, t=0.5, r=0.1, b=0, cp=6.7661), 0.25, prec=0.0001)
-        assert_close(_american_implied_vol("p", fs=110, x=100, t=0.5, r=0.1, b=0, cp=5.8374), 0.35, prec=0.0001)
+        assert_close(_american_implied_vol("p", fs=110, x=100, t=0.5, r=0.1, b=0, cp=5.8374, precision=0.0001), 0.35, prec=0.0001)
         assert_close(_american_implied_vol("c", fs=42, x=40, t=0.75, r=0.04, b=-0.04, cp=5.28), 0.35, prec=0.01)
         assert_close(_american_implied_vol("c", fs=90, x=100, t=0.1, r=0.10, b=0, cp=0.02), 0.15, prec=0.01)
 

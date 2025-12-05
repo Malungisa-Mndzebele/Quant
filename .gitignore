@@ -2,5 +2,9 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+env/
+.kiro/
+.hypothesis/
+.pytest_cache/
 
 .env
