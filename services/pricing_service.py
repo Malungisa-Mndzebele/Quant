@@ -6,6 +6,7 @@ for calculating option prices, Greeks, and implied volatility across all support
 
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
+import streamlit as st
 import optlib.gbs as gbs
 
 
@@ -117,8 +118,11 @@ def get_model_parameters(model: str) -> List[str]:
     return MODEL_CONFIGS[model]['parameters']
 
 
+@st.cache_data
 def calculate_option_price(model: str, params: Dict) -> PricingResult:
     """Calculate option price using specified model and parameters.
+    
+    Results are cached for identical inputs to improve performance.
     
     Args:
         model: One of the supported pricing models

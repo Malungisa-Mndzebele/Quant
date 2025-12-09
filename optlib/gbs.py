@@ -13,7 +13,7 @@ from __future__ import division
 # import necessary libaries
 import math
 import numpy as np
-from scipy.stats import mvn, norm
+from scipy.stats import norm, multivariate_normal
 
 import logging
 
@@ -431,12 +431,9 @@ def _phi(fs, t, gamma, h, i, r, b, v):
 def _cbnd(a, b, rho):
     # This distribution uses the Genz multi-variate normal distribution
     # code found as part of the standard SciPy distribution
-    lower = np.array([0, 0])
-    upper = np.array([a, b])
-    infin = np.array([0, 0])
-    correl = rho
-    error, value, inform = mvn.mvndst(lower, upper, infin, correl)
-    return value
+    mean = [0, 0]
+    cov = [[1, rho], [rho, 1]]
+    return multivariate_normal.cdf([a, b], mean=mean, cov=cov)
 
 
 # ### Implementation: Implied Vol

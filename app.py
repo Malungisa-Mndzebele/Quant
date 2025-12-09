@@ -6,6 +6,10 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
 import logging
+import numpy as np
+from typing import List, Dict
+import copy
+import io
 
 import config
 from services.pricing_service import (
@@ -15,6 +19,7 @@ from services.pricing_service import (
     PricingResult
 )
 from services.api_service import fetch_option_chain, fetch_historical_data
+from services.visualization_service import create_payoff_diagram
 from utils.formatters import (
     format_price,
     format_greek,
@@ -108,8 +113,340 @@ def render_sidebar():
     return page
 
 
+def initialize_strategy_state():
+    """Initialize session state for strategy builder."""
+    if 'strategy_positions' not in st.session_state:
+        st.session_state.strategy_positions = []
+    if 'saved_strategies' not in st.session_state:
+        st.session_state.saved_strategies = {}
+    if 'last_pricing_result' not in st.session_state:
+        st.session_state.last_pricing_result = None
+    if 'last_pricing_params' not in st.session_state:
+        st.session_state.last_pricing_params = None
+    if 'last_pricing_model' not in st.session_state:
+        st.session_state.last_pricing_model = None
+
+
+def export_pricing_to_csv(result: PricingResult, params: dict, model: str) -> str:
+    """Export pricing results to CSV format.
+    
+    Args:
+        result: PricingResult object with calculated values
+        params: Dictionary of input parameters
+        model: Name of the pricing model used
+        
+    Returns:
+        CSV string with all calculated values and headers
+    """
+    # Create dataframe with results
+    data = {
+        'Model': [MODEL_CONFIGS[model]['display_name']],
+        'Option_Type': ['Call' if params.get('option_type') == 'c' else 'Put'],
+        'Option_Price': [result.value],
+        'Delta': [result.delta],
+        'Gamma': [result.gamma],
+        'Theta': [result.theta],
+        'Vega': [result.vega],
+        'Rho': [result.rho]
+    }
+    
+    # Add input parameters
+    for key, value in params.items():
+        if key != 'option_type':
+            param_info = config.PARAMETER_INFO.get(key, {})
+            display_name = param_info.get('display_name', key)
+            data[f'Input_{display_name.replace(" ", "_")}'] = [value]
+    
+    df = pd.DataFrame(data)
+    return df.to_csv(index=False)
+
+
+def export_chart_to_png(fig: go.Figure) -> bytes:
+    """Export Plotly chart to PNG format.
+    
+    Args:
+        fig: Plotly figure object
+        
+    Returns:
+        PNG image as bytes
+    """
+    # Export to PNG using Plotly's built-in export
+    img_bytes = fig.to_image(format="png", width=1200, height=800, scale=2)
+    return img_bytes
+
+
+def calculate_strategy_metrics(positions: List[Dict]) -> Dict:
+    """Calculate strategy metrics including total cost, max profit, max loss, and breakeven points.
+    
+    Args:
+        positions: List of option positions
+        
+    Returns:
+        Dictionary with strategy metrics
+    """
+    if not positions:
+        return {
+            'total_cost': 0.0,
+            'max_profit': 0.0,
+            'max_loss': 0.0,
+            'breakeven_points': []
+        }
+    
+    # Calculate total cost (initial cash flow)
+    total_cost = sum(pos['quantity'] * pos['premium'] for pos in positions)
+    
+    # Determine price range for analysis
+    strikes = [pos['strike'] for pos in positions]
+    min_strike = min(strikes)
+    max_strike = max(strikes)
+    
+    # Create price range for payoff calculation
+    price_range = np.linspace(min_strike * 0.5, max_strike * 1.5, 1000)
+    
+    # Calculate total payoff at each price point
+    total_payoff = np.zeros_like(price_range)
+    
+    for pos in positions:
+        option_type = pos['option_type']
+        strike = pos['strike']
+        premium = pos['premium']
+        quantity = pos['quantity']
+        
+        # Calculate intrinsic value at expiration
+        if option_type == 'c':
+            intrinsic_value = np.maximum(price_range - strike, 0)
+        else:
+            intrinsic_value = np.maximum(strike - price_range, 0)
+        
+        # Calculate position payoff
+        position_payoff = quantity * (intrinsic_value - premium)
+        total_payoff += position_payoff
+    
+    # Find max profit and max loss
+    max_profit = np.max(total_payoff)
+    max_loss = np.min(total_payoff)
+    
+    # Find breakeven points (where payoff crosses zero)
+    breakeven_points = []
+    for i in range(len(total_payoff) - 1):
+        if (total_payoff[i] <= 0 and total_payoff[i + 1] > 0) or \
+           (total_payoff[i] >= 0 and total_payoff[i + 1] < 0):
+            # Linear interpolation to find exact breakeven
+            x1, x2 = price_range[i], price_range[i + 1]
+            y1, y2 = total_payoff[i], total_payoff[i + 1]
+            breakeven = x1 - y1 * (x2 - x1) / (y2 - y1)
+            breakeven_points.append(breakeven)
+    
+    return {
+        'total_cost': total_cost,
+        'max_profit': max_profit if not np.isinf(max_profit) else float('inf'),
+        'max_loss': max_loss if not np.isinf(max_loss) else float('-inf'),
+        'breakeven_points': breakeven_points
+    }
+
+
+def render_strategy_builder():
+    """Render the strategy builder section."""
+    st.header("🎯 Strategy Builder")
+    st.info("Build and analyze multi-leg option strategies by adding multiple positions.")
+    
+    # Position input form
+    with st.expander("➕ Add New Position", expanded=len(st.session_state.strategy_positions) == 0):
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            option_type = st.selectbox(
+                "Option Type",
+                ["Call", "Put"],
+                key="new_option_type"
+            )
+        
+        with col2:
+            strike = st.number_input(
+                "Strike Price",
+                min_value=0.01,
+                value=100.0,
+                step=1.0,
+                key="new_strike"
+            )
+        
+        with col3:
+            premium = st.number_input(
+                "Premium",
+                min_value=0.01,
+                value=5.0,
+                step=0.1,
+                key="new_premium"
+            )
+        
+        with col4:
+            quantity = st.number_input(
+                "Quantity",
+                min_value=-100,
+                max_value=100,
+                value=1,
+                step=1,
+                help="Positive for long, negative for short",
+                key="new_quantity"
+            )
+        
+        if st.button("➕ Add Position", type="primary", use_container_width=True):
+            if quantity != 0:
+                position = {
+                    'option_type': 'c' if option_type == "Call" else 'p',
+                    'strike': strike,
+                    'premium': premium,
+                    'quantity': quantity
+                }
+                st.session_state.strategy_positions.append(position)
+                st.success(f"✓ Added {'Long' if quantity > 0 else 'Short'} {abs(quantity)} {option_type} @ ${strike}")
+                st.rerun()
+            else:
+                st.warning("⚠ Quantity cannot be zero")
+    
+    # Display current positions
+    if st.session_state.strategy_positions:
+        st.subheader("Current Positions")
+        
+        # Create dataframe for display
+        positions_data = []
+        for i, pos in enumerate(st.session_state.strategy_positions):
+            positions_data.append({
+                'Position': i + 1,
+                'Type': 'Call' if pos['option_type'] == 'c' else 'Put',
+                'Strike': f"${pos['strike']:.2f}",
+                'Premium': f"${pos['premium']:.2f}",
+                'Quantity': pos['quantity'],
+                'Side': 'Long' if pos['quantity'] > 0 else 'Short',
+                'Cost': f"${pos['quantity'] * pos['premium']:.2f}"
+            })
+        
+        df = pd.DataFrame(positions_data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        
+        # Position management buttons
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            position_to_delete = st.selectbox(
+                "Select position to delete",
+                range(1, len(st.session_state.strategy_positions) + 1),
+                format_func=lambda x: f"Position {x}"
+            )
+        
+        with col2:
+            if st.button("🗑️ Delete Position", use_container_width=True):
+                st.session_state.strategy_positions.pop(position_to_delete - 1)
+                st.success(f"✓ Deleted position {position_to_delete}")
+                st.rerun()
+        
+        with col3:
+            if st.button("🗑️ Clear All", use_container_width=True):
+                st.session_state.strategy_positions = []
+                st.success("✓ Cleared all positions")
+                st.rerun()
+        
+        # Calculate and display strategy metrics
+        st.markdown("---")
+        st.subheader("Strategy Analysis")
+        
+        metrics = calculate_strategy_metrics(st.session_state.strategy_positions)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric(
+                "Total Cost",
+                f"${metrics['total_cost']:.2f}",
+                help="Net premium paid (positive) or received (negative)"
+            )
+        
+        with col2:
+            max_profit_display = "Unlimited" if np.isinf(metrics['max_profit']) else f"${metrics['max_profit']:.2f}"
+            st.metric(
+                "Max Profit",
+                max_profit_display,
+                help="Maximum possible profit at expiration"
+            )
+        
+        with col3:
+            max_loss_display = "Unlimited" if np.isinf(abs(metrics['max_loss'])) else f"${metrics['max_loss']:.2f}"
+            st.metric(
+                "Max Loss",
+                max_loss_display,
+                help="Maximum possible loss at expiration"
+            )
+        
+        with col4:
+            breakeven_display = f"{len(metrics['breakeven_points'])} point(s)"
+            st.metric(
+                "Breakeven Points",
+                breakeven_display,
+                help="Price points where profit/loss is zero"
+            )
+        
+        # Display breakeven points
+        if metrics['breakeven_points']:
+            st.markdown("**Breakeven Prices:**")
+            breakeven_cols = st.columns(len(metrics['breakeven_points']))
+            for i, be in enumerate(metrics['breakeven_points']):
+                with breakeven_cols[i]:
+                    st.info(f"${be:.2f}")
+        
+        # Display payoff diagram
+        st.markdown("---")
+        st.subheader("Payoff Diagram")
+        
+        try:
+            fig = create_payoff_diagram(st.session_state.strategy_positions)
+            st.plotly_chart(fig, use_container_width=True)
+        except Exception as e:
+            st.error(f"❌ Error creating payoff diagram: {str(e)}")
+            logger.error(f"Payoff diagram error: {e}", exc_info=True)
+        
+        # Save/Load strategy functionality
+        st.markdown("---")
+        st.subheader("Save/Load Strategy")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            strategy_name = st.text_input(
+                "Strategy Name",
+                placeholder="e.g., Iron Condor, Bull Call Spread",
+                key="strategy_name"
+            )
+            
+            if st.button("💾 Save Strategy", use_container_width=True):
+                if strategy_name:
+                    st.session_state.saved_strategies[strategy_name] = copy.deepcopy(st.session_state.strategy_positions)
+                    st.success(f"✓ Saved strategy '{strategy_name}'")
+                else:
+                    st.warning("⚠ Please enter a strategy name")
+        
+        with col2:
+            if st.session_state.saved_strategies:
+                selected_strategy = st.selectbox(
+                    "Load Saved Strategy",
+                    list(st.session_state.saved_strategies.keys()),
+                    key="load_strategy"
+                )
+                
+                if st.button("📂 Load Strategy", use_container_width=True):
+                    st.session_state.strategy_positions = copy.deepcopy(st.session_state.saved_strategies[selected_strategy])
+                    st.success(f"✓ Loaded strategy '{selected_strategy}'")
+                    st.rerun()
+            else:
+                st.info("No saved strategies yet")
+    
+    else:
+        st.info("👆 Add positions above to start building your strategy")
+
+
 def render_option_pricing_page():
     """Render the main option pricing page."""
+    initialize_strategy_state()
+    
     st.header("📈 Option Pricing Calculator")
     
     # Model selection
@@ -194,6 +531,11 @@ def render_option_pricing_page():
             with st.spinner("Calculating..."):
                 result = calculate_option_price(selected_model, params)
                 
+                # Store result in session state for export
+                st.session_state.last_pricing_result = result
+                st.session_state.last_pricing_params = params.copy()
+                st.session_state.last_pricing_model = selected_model
+                
                 # Display results
                 st.success("✓ Calculation Complete")
                 
@@ -248,16 +590,103 @@ def render_option_pricing_page():
                     )
                 
                 # Create visualization
-                render_greeks_chart(result)
+                greeks_fig = render_greeks_chart(result)
+                
+                # Export section
+                st.markdown("---")
+                st.markdown("### 📥 Export Results")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # CSV Export
+                    csv_data = export_pricing_to_csv(result, params, selected_model)
+                    st.download_button(
+                        label="📄 Download Results (CSV)",
+                        data=csv_data,
+                        file_name=f"option_pricing_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        use_container_width=True,
+                        help="Export all calculated values and input parameters to CSV"
+                    )
+                
+                with col2:
+                    # Chart Export
+                    try:
+                        png_data = export_chart_to_png(greeks_fig)
+                        st.download_button(
+                            label="📊 Download Chart (PNG)",
+                            data=png_data,
+                            file_name=f"greeks_chart_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                            mime="image/png",
+                            use_container_width=True,
+                            help="Export Greeks visualization as high-resolution PNG"
+                        )
+                    except Exception as export_error:
+                        st.warning(f"⚠ Chart export requires kaleido package: pip install kaleido")
+                        logger.warning(f"Chart export error: {export_error}")
                 
         except Exception as e:
             st.error(f"❌ Error: {str(e)}")
             logger.error(f"Pricing calculation error: {e}", exc_info=True)
+    
+    # Display export buttons for previously calculated results
+    elif st.session_state.last_pricing_result is not None:
+        st.info("💡 Calculate an option price to see results and export options")
+        
+        with st.expander("📥 Export Previous Results", expanded=False):
+            result = st.session_state.last_pricing_result
+            params = st.session_state.last_pricing_params
+            model = st.session_state.last_pricing_model
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # CSV Export
+                csv_data = export_pricing_to_csv(result, params, model)
+                st.download_button(
+                    label="📄 Download Results (CSV)",
+                    data=csv_data,
+                    file_name=f"option_pricing_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    use_container_width=True,
+                    help="Export all calculated values and input parameters to CSV"
+                )
+            
+            with col2:
+                # Recreate chart for export
+                greeks_fig = render_greeks_chart(result, return_fig=True)
+                try:
+                    png_data = export_chart_to_png(greeks_fig)
+                    st.download_button(
+                        label="📊 Download Chart (PNG)",
+                        data=png_data,
+                        file_name=f"greeks_chart_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                        mime="image/png",
+                        use_container_width=True,
+                        help="Export Greeks visualization as high-resolution PNG"
+                    )
+                except Exception as export_error:
+                    st.warning(f"⚠ Chart export requires kaleido package: pip install kaleido")
+                    logger.warning(f"Chart export error: {export_error}")
+    
+    # Strategy Builder Section
+    st.markdown("---")
+    render_strategy_builder()
 
 
-def render_greeks_chart(result: PricingResult):
-    """Render a chart showing the Greeks."""
-    st.markdown("### Greeks Visualization")
+def render_greeks_chart(result: PricingResult, return_fig: bool = False):
+    """Render a chart showing the Greeks.
+    
+    Args:
+        result: PricingResult object with Greeks values
+        return_fig: If True, return the figure object instead of displaying
+        
+    Returns:
+        Plotly figure object if return_fig is True, otherwise None
+    """
+    if not return_fig:
+        st.markdown("### Greeks Visualization")
     
     greeks_data = {
         'Greek': ['Delta', 'Gamma', 'Theta', 'Vega', 'Rho'],
@@ -290,7 +719,11 @@ def render_greeks_chart(result: PricingResult):
         template=config.CHART_TEMPLATE
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    if return_fig:
+        return fig
+    else:
+        st.plotly_chart(fig, use_container_width=True)
+        return fig
 
 
 def render_market_data_page():

@@ -35,13 +35,18 @@ git clone https://github.com/BartolomeD/optlib.git
 
 Create a virtual environment
 ```
+# Unix/macOS
 python3 -m venv env
 source env/bin/activate
+
+# Windows
+python -m venv env
+.\env\Scripts\Activate
 ```
 
 and in the `optlib` directory execute
 ```
-python setup.py install
+pip install .
 ```
 
 The `optlib.api` module requires a TDAmeritrade API key. Create a developer account on https://developer.tdameritrade.com/ to get one.

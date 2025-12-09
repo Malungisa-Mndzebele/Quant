@@ -9,6 +9,7 @@ from typing import Optional, Dict, Any
 import requests
 import random
 from datetime import datetime, timedelta
+import streamlit as st
 import config
 from optlib.instruments import OptionChain, Pricehistory
 from optlib.api import InputError
@@ -176,6 +177,7 @@ def _generate_mock_price_history(symbol: str) -> Pricehistory:
     )
 
 
+@st.cache_data(ttl=300)  # Cache for 5 minutes (300 seconds)
 def fetch_option_chain(
     symbol: str,
     apikey: Optional[str] = None,
@@ -184,6 +186,7 @@ def fetch_option_chain(
     """Fetch option chain from TDAmeritrade API.
     
     Wrapper for optlib.instruments.OptionChain.get() with enhanced error handling.
+    Results are cached for 5 minutes to improve performance.
     
     Args:
         symbol: Stock ticker symbol
@@ -264,6 +267,7 @@ def fetch_option_chain(
         raise APIError(f"Unexpected error: {e}") from e
 
 
+@st.cache_data(ttl=300)  # Cache for 5 minutes (300 seconds)
 def fetch_historical_data(
     symbol: str,
     apikey: Optional[str] = None,
@@ -272,6 +276,7 @@ def fetch_historical_data(
     """Fetch historical price data from TDAmeritrade API.
     
     Wrapper for optlib.instruments.Pricehistory.get() with enhanced error handling.
+    Results are cached for 5 minutes to improve performance.
     
     Args:
         symbol: Stock ticker symbol
