@@ -264,15 +264,31 @@ class ConnectionPool:
         Returns:
             Query results based on fetch mode
         """
-        with self.transaction() as conn:
-            cursor = conn.cursor()
-            cursor.execute(query, parameters)
-            
-            if fetch == 'one':
-                return cursor.fetchone()
-            elif fetch == 'all':
-                return cursor.fetchall()
-            else:
+        # Determine if query is read-only
+        query_upper = query.strip().upper()
+        is_read_only = query_upper.startswith(('SELECT', 'PRAGMA', 'EXPLAIN'))
+        
+        if is_read_only:
+            # Use connection without transaction for reads
+            with self.connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, parameters)
+                
+                if fetch == 'one':
+                    return cursor.fetchone()
+                elif fetch == 'all':
+                    return cursor.fetchall()
+                return None
+        else:
+            # Use transaction for writes
+            with self.transaction() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, parameters)
+                
+                if fetch == 'one':
+                    return cursor.fetchone()
+                elif fetch == 'all':
+                    return cursor.fetchall()
                 return cursor.lastrowid
     
     def close_all(self):
