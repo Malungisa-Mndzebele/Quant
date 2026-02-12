@@ -133,12 +133,13 @@ class MarketDataService:
         self._max_reconnect_attempts: int = 5
         self._reconnect_delay: float = 2.0
         
-        # Cache for frequently accessed data
-        self._quote_cache: Dict[str, tuple[Quote, float]] = {}
-        self._bars_cache: Dict[str, tuple[pd.DataFrame, float]] = {}
-        self._market_status_cache: Optional[tuple[MarketStatus, float]] = None
+        # Cache for frequently accessed data (using improved cache manager)
+        from utils.cache_manager import get_cache
+        self._quote_cache = get_cache('market_quotes', max_size=1000, ttl_seconds=settings.cache_ttl_seconds)
+        self._bars_cache = get_cache('market_bars', max_size=500, ttl_seconds=settings.cache_ttl_seconds)
+        self._market_status_cache = get_cache('market_status', max_size=10, ttl_seconds=settings.cache_ttl_seconds)
         
-        # Cache TTL in seconds
+        # Cache TTL in seconds (kept for backward compatibility)
         self.cache_ttl = settings.cache_ttl_seconds
         
         # Rate limiting
@@ -271,11 +272,11 @@ class MarketDataService:
         
         # Check cache
         cache_key = f"{asset_class.value}:{symbol}"
-        if use_cache and cache_key in self._quote_cache:
-            cached_quote, cached_time = self._quote_cache[cache_key]
-            if self._is_cache_valid(cached_time):
+        if use_cache:
+            cached_data = self._quote_cache.get(cache_key)
+            if cached_data is not None:
                 logger.debug(f"Using cached quote for {symbol} ({asset_class.value})")
-                return cached_quote
+                return cached_data
         
         # Fetch from API based on asset class
         logger.info(f"Fetching latest quote for {symbol} ({asset_class.value})")
@@ -330,7 +331,7 @@ class MarketDataService:
                 raise ValueError(f"Unsupported asset class: {asset_class}")
             
             # Update cache
-            self._quote_cache[cache_key] = (quote, time.time())
+            self._quote_cache.set(cache_key, quote)
             
             return quote
         except Exception as e:
@@ -389,9 +390,9 @@ class MarketDataService:
         cache_key = f"{asset_class.value}:{symbol}_{timeframe}_{start.isoformat()}_{end.isoformat()}_{limit}"
         
         # Check cache
-        if use_cache and cache_key in self._bars_cache:
-            cached_bars, cached_time = self._bars_cache[cache_key]
-            if self._is_cache_valid(cached_time):
+        if use_cache:
+            cached_bars = self._bars_cache.get(cache_key)
+            if cached_bars is not None:
                 logger.debug(f"Using cached bars for {symbol}")
                 return cached_bars.copy()
         
