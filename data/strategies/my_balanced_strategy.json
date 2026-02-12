@@ -1,0 +1,72 @@
+{
+  "name": "My Balanced Strategy",
+  "style": "custom",
+  "min_confidence": 0.65,
+  "signal_threshold": 0.75,
+  "lstm_weight": 0.4,
+  "rf_weight": 0.4,
+  "sentiment_weight": 0.2,
+  "max_position_size": 0.08,
+  "max_portfolio_risk": 0.02,
+  "stop_loss_pct": 0.05,
+  "take_profit_pct": 0.1,
+  "max_trades_per_day": 10,
+  "min_holding_period": 1,
+  "max_holding_period": 30,
+  "indicators": [
+    {
+      "indicator_type": "sma",
+      "enabled": true,
+      "weight": 0.8,
+      "parameters": {
+        "period": 20
+      }
+    },
+    {
+      "indicator_type": "ema",
+      "enabled": true,
+      "weight": 0.9,
+      "parameters": {
+        "period": 12
+      }
+    },
+    {
+      "indicator_type": "rsi",
+      "enabled": true,
+      "weight": 1.0,
+      "parameters": {
+        "period": 14
+      }
+    },
+    {
+      "indicator_type": "macd",
+      "enabled": true,
+      "weight": 0.9,
+      "parameters": {
+        "fast_period": 12,
+        "slow_period": 26,
+        "signal_period": 9
+      }
+    },
+    {
+      "indicator_type": "bollinger_bands",
+      "enabled": true,
+      "weight": 0.7,
+      "parameters": {
+        "period": 20,
+        "num_std": 2.0
+      }
+    },
+    {
+      "indicator_type": "atr",
+      "enabled": true,
+      "weight": 0.6,
+      "parameters": {
+        "period": 14
+      }
+    }
+  ],
+  "use_trailing_stop": true,
+  "trailing_stop_pct": 0.03,
+  "rebalance_frequency": 7
+}

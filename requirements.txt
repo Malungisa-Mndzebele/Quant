@@ -19,3 +19,10 @@ python-dotenv>=1.0.0
 
 # HTTP Requests (for API integration)
 requests>=2.31.0
+
+# Alpaca API
+alpaca-py>=0.20.0
+
+# Sentiment Analysis
+transformers>=4.30.0
+torch>=2.0.0

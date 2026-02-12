@@ -8,3 +8,14 @@ env/
 .pytest_cache/
 
 .env
+.env.ai
+
+# AI Trading Agent specific
+data/models/*.h5
+data/models/*.pkl
+data/cache/
+data/database/*.db
+data/.encryption_key
+logs/
+ai_models/
+*.log

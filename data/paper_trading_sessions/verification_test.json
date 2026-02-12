@@ -1,0 +1,19 @@
+{
+  "session_name": "verification_test",
+  "saved_at": "2026-02-11T22:03:28.405663",
+  "account": {
+    "account_id": "paper_20260211_220328",
+    "cash": 100100.0,
+    "portfolio_value": 100100.0,
+    "buying_power": 200200.0,
+    "equity": 100100.0,
+    "initial_capital": 100000.0,
+    "total_return": 100.0,
+    "total_return_pct": 0.1,
+    "created_at": "2026-02-11T22:03:28.251993",
+    "last_updated": "2026-02-11T22:03:28.406663",
+    "mode": "PAPER TRADING"
+  },
+  "positions": [],
+  "database_path": "data/database/paper_trading_test.db"
+}
